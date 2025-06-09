@@ -16,6 +16,9 @@ This is a backend API system for a Splitwise-style application, built using **No
 -  Simplified settlement results
 
 ###  API Endpoints
+base url for api endpoints --express-production-e484.up.railway.app
+so you can visit like ---------express-production-e484.up.railway.app/expenses   and all 
+
 
 ####  Expense Management
 
