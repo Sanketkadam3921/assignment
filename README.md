@@ -52,8 +52,7 @@ backend-assignment/
 ##  Postman Collection
 
 ✅ Public Postman Collection with pre-filled data:  
-https://api.postman.com/collections/24738996-97758b1f-1f96-4bd4-942c-6cbe5d1232a2?access_key=PMAT-01JXASJGGAMTEZWPD1M0H2AHH2
-- Includes test users: `Shantanu`, `Sanket`, `Om`
+https://www.postman.com/sanket3921/sanket/collection/24738996-b004f049-e233-4ef5-9a79-667df3f88c6a/?action=share&creator=24738996
 - Covers normal + edge cases (e.g., invalid expense, non-existent expense)
 
 ---
