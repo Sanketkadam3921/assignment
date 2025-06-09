@@ -51,8 +51,7 @@ backend-assignment/
 
 ##  Postman Collection
 
-✅ Public Postman Collection with pre-filled data:  
-https://www.postman.com/sanket3921/sanket/collection/24738996-b004f049-e233-4ef5-9a79-667df3f88c6a/?action=share&creator=24738996
+✅ Public Postman Collection with pre-filled data:  https://www.postman.com/sanket3921/sanket/collection/agubcz4/split-app-backend-api-prisma-schema?action=share&creator=24738996
 - Covers normal + edge cases (e.g., invalid expense, non-existent expense)
 
 ---
