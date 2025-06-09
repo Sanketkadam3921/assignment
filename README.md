@@ -1,4 +1,5 @@
-#  Split App - Backend Assignment
+#  Split App - Backend Assignment  -- Please refer to main branch too 
+
 
 This is a backend API system for a Splitwise-style application, built using **Node.js**, **Express.js**, **Prisma**, and **PostgreSQL**. It allows groups of people to track shared expenses and automatically calculates who owes whom.
 
