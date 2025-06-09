@@ -43,3 +43,8 @@ model Settlement {
   // Relation to Expense
   expense Expense? @relation(fields: [expenseId], references: [id], onDelete: SetNull)
 }
+enum ShareType {
+  EQUAL
+  EXACT
+  PERCENTAGE
+}
