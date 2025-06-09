@@ -11,10 +11,11 @@ const settlementController = {
                 message: 'Balances calculated successfully'
             });
         } catch (error) {
+            console.error('Error calculating balances:', error);
             return res.status(500).json({
                 success: false,
-                message: 'Server error',
-                error: error.message
+                message: 'Server error while calculating balances',
+                error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
             });
         }
     },
@@ -29,10 +30,30 @@ const settlementController = {
                 message: 'Settlements calculated successfully'
             });
         } catch (error) {
+            console.error('Error calculating settlements:', error);
             return res.status(500).json({
                 success: false,
-                message: 'Server error',
-                error: error.message
+                message: 'Server error while calculating settlements',
+                error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+            });
+        }
+    },
+
+    // GET /summary
+    async getSummary(req, res) {
+        try {
+            const summary = await settlementService.getExpenseSummary();
+            return res.status(200).json({
+                success: true,
+                data: summary,
+                message: 'Expense summary retrieved successfully'
+            });
+        } catch (error) {
+            console.error('Error getting expense summary:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Server error while getting expense summary',
+                error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
             });
         }
     }

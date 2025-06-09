@@ -14,21 +14,40 @@ const expenseService = {
             throw new Error('Amount must be positive');
         }
 
+        // Ensure participants is an array and includes the person who paid
+        let finalParticipants = Array.isArray(participants) ? participants : [];
 
-        let finalParticipants = participants.length > 0 ? participants : [paidBy];
+        // If no participants provided, default to just the person who paid
+        if (finalParticipants.length === 0) {
+            finalParticipants = [paidBy];
+        }
 
+        // Ensure the person who paid is included in participants
         if (!finalParticipants.includes(paidBy)) {
             finalParticipants.push(paidBy);
         }
 
+        // For EXACT shares, validate that customShares is provided and matches participants
+        if (shareType === 'EXACT') {
+            if (!customShares || typeof customShares !== 'object') {
+                throw new Error('Custom shares are required for EXACT share type');
+            }
+
+            // Validate that all participants have shares defined
+            const totalCustomAmount = Object.values(customShares).reduce((sum, share) => sum + Number(share), 0);
+            if (Math.abs(totalCustomAmount - amount) > 0.01) {
+                throw new Error('Custom shares must add up to the total amount');
+            }
+        }
+
         return await prisma.expense.create({
             data: {
-                amount,
+                amount: Number(amount),
                 description,
                 paidBy,
                 participants: finalParticipants,
                 shareType,
-                customShares
+                customShares: customShares || {}
             }
         });
     },
@@ -44,6 +63,16 @@ const expenseService = {
 
         if (updateData.amount && updateData.amount <= 0) {
             throw new Error('Amount must be positive');
+        }
+
+        // Convert amount to number if provided
+        if (updateData.amount) {
+            updateData.amount = Number(updateData.amount);
+        }
+
+        // Handle participants array
+        if (updateData.participants && !Array.isArray(updateData.participants)) {
+            updateData.participants = [updateData.participants];
         }
 
         return await prisma.expense.update({
@@ -71,11 +100,16 @@ const expenseService = {
         const peopleSet = new Set();
 
         expenses.forEach(expense => {
+            // Add the person who paid
             peopleSet.add(expense.paidBy);
-            expense.participants.forEach(person => peopleSet.add(person));
+
+            // Add all participants
+            if (Array.isArray(expense.participants)) {
+                expense.participants.forEach(person => peopleSet.add(person));
+            }
         });
 
-        return Array.from(peopleSet);
+        return Array.from(peopleSet).sort();
     }
 };
 

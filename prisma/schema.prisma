@@ -8,20 +8,38 @@ datasource db {
 }
 
 model Expense {
-  id           String        @id @default(uuid())
+  id           String   @id @default(cuid())
   amount       Float
   description  String
-  paidBy       String        // Person name who paid
-  participants String[]      // Array of participant names
-  shareType    ShareType     @default(EQUAL)
-  customShares Json?         // For exact amounts: {"Shantanu": 200, "Sanket": 400}
-  
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  paidBy       String // Person who paid (stored as name/string)
+  participants String[] // Array of participant names
+  shareType    String   @default("EQUAL") // EQUAL, EXACT, PERCENTAGE
+  customShares Json? // For custom share amounts
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // ✅ Add this line to fix the relation
+  settlements Settlement[] // One expense can have many settlements
 }
 
-enum ShareType {
-  EQUAL
-  EXACT
-  PERCENTAGE
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Settlement {
+  id         String   @id @default(cuid())
+  amount     Float
+  fromPerson String // Person paying
+  toPerson   String // Person receiving
+  expenseId  String? // Optional link to expense
+  settled    Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relation to Expense
+  expense Expense? @relation(fields: [expenseId], references: [id], onDelete: SetNull)
 }

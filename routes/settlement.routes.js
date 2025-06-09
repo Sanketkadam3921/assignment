@@ -9,4 +9,7 @@ router.get('/balances', settlementController.getBalances);
 // GET /settlements
 router.get('/settlements', settlementController.getSettlements);
 
+// GET /summary - Add expense summary endpoint
+router.get('/summary', settlementController.getSummary);
+
 export default router;
