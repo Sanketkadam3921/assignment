@@ -1,0 +1,27 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Expense {
+  id           String        @id @default(uuid())
+  amount       Float
+  description  String
+  paidBy       String        // Person name who paid
+  participants String[]      // Array of participant names
+  shareType    ShareType     @default(EQUAL)
+  customShares Json?         // For exact amounts: {"Shantanu": 200, "Sanket": 400}
+  
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+enum ShareType {
+  EQUAL
+  EXACT
+  PERCENTAGE
+}

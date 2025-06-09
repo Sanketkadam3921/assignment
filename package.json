@@ -1,0 +1,22 @@
+{
+  "name": "split-app-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon app.js",
+    "start": "node app.js",
+    "db:migrate": "npx prisma migrate dev",
+    "db:generate": "npx prisma generate"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express-validator": "^7.0.1",
+    "@prisma/client": "^5.6.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "prisma": "^5.6.0"
+  }
+}
