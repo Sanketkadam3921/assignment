@@ -39,19 +39,6 @@ so you can visit like ---------express-production-e484.up.railway.app/expenses  
 
 ---
 
-##  Folder Structure
-
-backend-assignment/
-├── prisma/ # Prisma schema and migrations
-├── routes/ # Express routes
-├── controllers/ # Request handlers
-├── services/ # Core business logic
-├── app.js # App entry point
-├── .env # Environment variables
-├── README.md # Project documentation
-
-
----
 
 ##  Postman Collection
 
