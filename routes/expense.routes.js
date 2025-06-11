@@ -1,15 +1,12 @@
 
-// routes/expense.routes.js
 import express from 'express';
 import { body, param } from 'express-validator';
 import expenseController from '../controllers/expense.controller.js';
 
 const router = express.Router();
 
-// GET /expenses
 router.get('/', expenseController.getAllExpenses);
 
-// POST /expenses
 router.post(
     '/',
     [
@@ -83,7 +80,6 @@ router.put(
     expenseController.updateExpense
 );
 
-// DELETE /expenses/:id
 router.delete(
     '/:id',
     [
@@ -94,7 +90,6 @@ router.delete(
     expenseController.deleteExpense
 );
 
-// GET /expenses/people
 router.get('/people', expenseController.getAllPeople);
 
 export default router;
