@@ -1,11 +1,9 @@
-// db.js - Create this file in your project root
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient({
     log: ['query', 'info', 'warn', 'error'],
 });
 
-// Test database connection
 async function connectDB() {
     try {
         await prisma.$connect();
@@ -16,7 +14,6 @@ async function connectDB() {
     }
 }
 
-// Graceful shutdown
 process.on('beforeExit', async () => {
     await prisma.$disconnect();
 });
