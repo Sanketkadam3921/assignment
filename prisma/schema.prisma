@@ -7,19 +7,79 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Enums
+enum ShareType {
+  EQUAL
+  EXACT
+  PERCENTAGE
+}
+
+enum ExpenseCategory {
+  FOOD
+  TRAVEL
+  UTILITIES
+  ENTERTAINMENT
+  RENT
+  TRANSPORT
+  SHOPPING
+  HEALTHCARE
+  EDUCATION
+  OTHER
+}
+
+enum RecurrenceFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
 model Expense {
-  id           String   @id @default(cuid())
-  amount       Decimal  @db.Decimal(10, 2) // Better for money than Float
+  id           String          @id @default(cuid())
+  amount       Decimal         @db.Decimal(10, 2)
   description  String
-  paidBy       String   // Person who paid (stored as name/string)
-  participants String[] // Array of participant names
-  shareType    String   @default("EQUAL") // EQUAL, EXACT, PERCENTAGE
-  customShares Json?    // For custom share amounts
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  paidBy       String
+  participants String[]
+  shareType    ShareType       @default(EQUAL)
+  customShares Json?
+  category     ExpenseCategory @default(OTHER)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  
+  // Recurring expense relation
+  recurringExpenseId String?
+  recurringExpense   RecurringExpense? @relation(fields: [recurringExpenseId], references: [id], onDelete: SetNull)
   
   // Relations
   settlements Settlement[]
+  
+  @@index([category])
+  @@index([createdAt])
+  @@index([paidBy])
+}
+
+model RecurringExpense {
+  id          String              @id @default(cuid())
+  amount      Decimal             @db.Decimal(10, 2)
+  description String
+  paidBy      String
+  participants String[]
+  shareType   ShareType           @default(EQUAL)
+  customShares Json?
+  category    ExpenseCategory     @default(OTHER)
+  frequency   RecurrenceFrequency
+  startDate   DateTime
+  endDate     DateTime?           // Optional end date
+  nextDue     DateTime            // Next execution date
+  isActive    Boolean             @default(true)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  
+  // Generated expenses
+  expenses Expense[]
+  
+  @@index([nextDue])
+  @@index([isActive])
 }
 
 model User {
@@ -32,19 +92,13 @@ model User {
 
 model Settlement {
   id         String   @id @default(cuid())
-  amount     Decimal  @db.Decimal(10, 2) // Better for money than Float
-  fromPerson String   // Person paying
-  toPerson   String   // Person receiving
-  expenseId  String?  // Optional link to expense
+  amount     Decimal  @db.Decimal(10, 2)
+  fromPerson String
+  toPerson   String
+  expenseId  String?
   settled    Boolean  @default(false)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   
-  // Relation to Expense
   expense Expense? @relation(fields: [expenseId], references: [id], onDelete: SetNull)
-}
-enum ShareType {
-  EQUAL
-  EXACT
-  PERCENTAGE
 }
