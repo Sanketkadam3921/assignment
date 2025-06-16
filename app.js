@@ -15,7 +15,7 @@ connectDB();
 
 // Middleware
 app.use(cors({
-    origin: true, // Reflects the request origin automatically
+    origin: ['https://frontendassignment-three.vercel.app/'],
     credentials: true
 }));
 
