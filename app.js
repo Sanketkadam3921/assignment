@@ -15,7 +15,7 @@ connectDB();
 
 // Middleware
 app.use(cors({
-    origin: ['https://frontendassignment-three.vercel.app/'],
+    origin: ['https://frontendassignment-5kh5kxc3y-sanketkadam3921s-projects.vercel.app/'],
     credentials: true
 }));
 
