@@ -1,54 +1,135 @@
-#  Split App - Backend Assignment  -- Please refer to all brances 
+#  backend Developer Assignment 
 
+A complete backend API system for a Splitwise-style expense sharing application, designed for the **DevDynamics Backend Intern Assignment**.
 
-This is a backend API system for a Splitwise-style application, built using **Node.js**, **Express.js**, **Prisma**, and **PostgreSQL**. It allows groups of people to track shared expenses and automatically calculates who owes whom.
-
-
-
-## Features
-
-###  Core Features
-
--  Add, view, edit, delete expenses
--  People auto-added from expenses
--  Split by percentage, share, or exact amount
--  Calculate who owes/gets how much
--  Simplified settlement results
-
-###  API Endpoints
-base url for api endpoints --express-production-e484.up.railway.app
-so you can visit like ---------express-production-e484.up.railway.app/expenses   and all 
-
-
-####  Expense Management
-
-| Method | Endpoint              | Description                   |
-|--------|-----------------------|-------------------------------|
-| GET    | `/api/expenses`       | Get all expenses              |
-| POST   | `/api/expenses`       | Add new expense               |
-| PUT    | `/api/expenses/:id`   | Update existing expense       |
-| DELETE | `/api/expenses/:id`   | Delete an expense             |
-
-####  Settlement & People
-
-| Method | Endpoint            | Description                              |
-|--------|---------------------|------------------------------------------|
-| GET    | `/api/people`       | List all involved people                 |
-| GET    | `/api/balances`     | Show each person’s balance               |
-| GET    | `/api/settlements`  | Show simplified settlement transactions  |
+Built using **Node.js**, **Express.js**, **Prisma**, and **PostgreSQL**, this app enables group expense tracking, smart settlements, and recurring expense automation.
 
 ---
 
+##  Features
 
-##  Postman Collection
+### ✅ Core Functionalities
+- Add, update, delete expenses with smart splitting
+- Support for **Equal**, **Exact**, and **Percentage** sharing
+- Auto-manages people involved in expenses
+- Settlement calculations using **greedy algorithm**
+- Track balances and settlements between people
 
-✅ Public Postman Collection with pre-filled data:  https://www.postman.com/sanket3921/sanket/collection/agubcz4/split-app-backend-api-prisma-schema?action=share&creator=24738996
-- Covers normal + edge cases (e.g., invalid expense, non-existent expense)
+### 🔁 Recurring Expenses
+- Define recurring bills with custom frequency (e.g., rent)
+
+### 📊 Analytics
+- Monthly summaries
+- Category-wise reports
+- Person-wise insights
+- Group vs. individual spending breakdown
 
 ---
 
-## 🛠️ Setup Instructions
+## 🌐 Base API URL  
+`https://express-production-e484.up.railway.app`
 
+---
+
+## 📬 API Endpoints
+
+### 🔹 Expense Management
+| Method | Endpoint                     | Description                    |
+|--------|------------------------------|--------------------------------|
+| GET    | `/expenses`                  | Get all expenses               |
+| POST   | `/expenses`                  | Add a new expense              |
+| PUT    | `/expenses/:id`              | Update an expense              |
+| DELETE | `/expenses/:id`              | Delete an expense              |
+
+### 🔹 People & Balances
+| Method | Endpoint                     | Description                    |
+|--------|------------------------------|--------------------------------|
+| GET    | `/expenses/people`           | List all involved people       |
+| GET    | `/balances`                  | Show person-wise balances      |
+| GET    | `/settlements`               | Get simplified settlements     |
+
+### 🔹 Categories
+| Method | Endpoint                         | Description                       |
+|--------|----------------------------------|-----------------------------------|
+| GET    | `/expenses/categories`           | Get all available categories      |
+| GET    | `/expenses/by-category`          | Fetch all expenses by category    |
+| GET    | `/expenses/category-summary`     | Summary by category               |
+
+### 🔹 Recurring Expenses
+| Method | Endpoint                          | Description                          |
+|--------|-----------------------------------|--------------------------------------|
+| GET    | `/expenses/recurring`             | Get all recurring expenses           |
+| POST   | `/expenses/recurring`             | Add a recurring expense              |
+| PUT    | `/expenses/recurring/:id`         | Update recurring expense             |
+
+### 🔹 Analytics
+| Method | Endpoint                                     | Description                                  |
+|--------|----------------------------------------------|----------------------------------------------|
+| GET    | `/expenses/analytics/monthly-summary`        | Monthly totals (with optional filters)       |
+| GET    | `/expenses/analytics/spending-patterns`      | Patterns by person, category, time           |
+| GET    | `/expenses/analytics/top-expenses`           | Top expenses with filters                    |
+| GET    | `/expenses/analytics/individual-vs-group`    | Compare solo vs shared spending              |
+
+---
+
+##  Sample Payloads
+
+### ✅ Add Regular Expense
+```json
+{
+  "amount": 650,
+  "description": "Dinner at restaurant",
+  "paid_by": "Sanket",
+  "participants": ["Sanket", "Om", "Shantanu"],
+  "shareType": "EQUAL",
+  "category": "FOOD"
+}
+✅ Add Custom Share (EXACT)
+json
+Copy
+Edit
+{
+  "amount": 1000,
+  "description": "Concert tickets",
+  "paid_by": "Om",
+  "participants": ["Om", "Sanket", "Shantanu"],
+  "shareType": "EXACT",
+  "customShares": {
+    "Om": 500,
+    "Sanket": 300,
+    "Shantanu": 200
+  },
+  "category": "ENTERTAINMENT"
+}
+✅ Add Recurring Expense
+json
+Copy
+Edit
+{
+  "amount": 2500,
+  "description": "Monthly house rent",
+  "paid_by": "Shantanu",
+  "participants": ["Shantanu", "Om", "Sanket"],
+  "shareType": "EQUAL",
+  "category": "RENT",
+  "frequency": "MONTHLY",
+  "startDate": "2025-06-01",
+  "endDate": "2025-12-01"
+}
+ Demo Video -
+
+
+Postman Collection
+
+
+📬 Public Postman Collection with pre-filled test data:
+🔗 Click here to open collection
+
+Covers all core flows and edge cases
+
+Includes recurring, analytics, settlements
+
+🛠️ Setup Instructions (For Local Dev)
 
 git clone https://github.com/Sanketkadam3921/split-backend-app.git
 cd split-backend-app
@@ -56,34 +137,25 @@ npm install
 npx prisma generate
 npx prisma migrate deploy
 npm start
+Create .env with your PostgreSQL connection string:
 
-    Create a .env file:
 
 DATABASE_URL=your_railway_database_url
 
-Settlement Calculation Logic
+settlement Logic Overview
+For each expense:
 
-    Each expense has multiple splits (e.g., Shantanu: 50%, Sanket: 50%)
+paid_by is credited the full amount
 
-    For each person:
+Each participant is debited based on their share
 
-        Calculate their total paid
+Net balances are calculated per person
 
-        Calculate their total owed
+Greedy algorithm used to settle debts with minimum transactions
 
-    Final balance = paid - owed
 
-    To simplify, we use a greedy method to minimize transactions in /settlements.
-
- Known Limitations
-
-    No recurring expenses yet
-
-    No web UI (API only)
-
-    Basic validation in place — improvements possible
 
 Author
+Made with care by Sanket Kadam
+🎯 Passionate about backend engineering, systems design, and API architecture
 
-Made by Sanket Kadam
-Feel free to reach out if you have any feedback or suggestions!
