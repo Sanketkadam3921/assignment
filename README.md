@@ -72,45 +72,7 @@ Built using **Node.js**, **Express.js**, **Prisma**, and **PostgreSQL**, this ap
 
 ---
 
-##  Sample Payloads
 
-### Add Regular Expense
-{
-  "amount": 650,
-  "description": "Dinner at restaurant",
-  "paid_by": "Sanket",
-  "participants": ["Sanket", "Om", "Shantanu"],
-  "shareType": "EQUAL",
-  "category": "FOOD"
-}
-Add Custom Share (EXACT)
-
-{
-  "amount": 1000,
-  "description": "Concert tickets",
-  "paid_by": "Om",
-  "participants": ["Om", "Sanket", "Shantanu"],
-  "shareType": "EXACT",
-  "customShares": {
-    "Om": 500,
-    "Sanket": 300,
-    "Shantanu": 200
-  },
-  "category": "ENTERTAINMENT"
-}
-Add Recurring Expense
-
-{
-  "amount": 2500,
-  "description": "Monthly house rent",
-  "paid_by": "Shantanu",
-  "participants": ["Shantanu", "Om", "Sanket"],
-  "shareType": "EQUAL",
-  "category": "RENT",
-  "frequency": "MONTHLY",
-  "startDate": "2025-06-01",
-  "endDate": "2025-12-01"
-}
  Demo Video -
 
 
@@ -129,19 +91,25 @@ Includes recurring, analytics, settlements
 🛠️ Setup Instructions (For Local Dev)
 
 git clone https://github.com/Sanketkadam3921/split-backend-app.git
+
 cd split-backend-app
+
 npm install
+
 npx prisma generate
+
 npx prisma migrate deploy
+
 npm start
+
 Create .env with your PostgreSQL connection string:
 
 
-DATABASE_URL=your_railway_database_url
+
+
 
 settlement Logic Overview
 For each expense:
-
 paid_by is credited the full amount
 
 Each participant is debited based on their share
