@@ -1,3 +1,5 @@
+import settlementService from '../services/settlement.service.js';
+
 const settlementController = {
     // GET /balances
     async getBalances(req, res) {
