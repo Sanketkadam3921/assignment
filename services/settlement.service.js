@@ -75,14 +75,32 @@ const settlementService = {
         const balances = await this.calculateBalances();
         const settlements = [];
 
+        // Validate balances first
+        const validBalances = {};
+        let hasInvalidAmounts = false;
+
+        Object.entries(balances).forEach(([person, data]) => {
+            // Check for extremely large numbers that might be data errors
+            if (Math.abs(data.balance) > 1e15) { // 1 quadrillion threshold
+                console.error(`Invalid balance for ${person}: ${data.balance}`);
+                hasInvalidAmounts = true;
+                return;
+            }
+            validBalances[person] = data;
+        });
+
+        if (hasInvalidAmounts) {
+            throw new Error("Cannot calculate settlements - invalid balance amounts detected");
+        }
+
         // Separate debtors and creditors
         const debtors = [];
         const creditors = [];
 
-        Object.entries(balances).forEach(([person, data]) => {
-            if (data.balance < 0) { // Owes money
+        Object.entries(validBalances).forEach(([person, data]) => {
+            if (data.balance < -0.01) { // Owes money (using small threshold)
                 debtors.push({ person, amount: Math.abs(data.balance) });
-            } else if (data.balance > 0) { // Is owed money
+            } else if (data.balance > 0.01) { // Is owed money
                 creditors.push({ person, amount: data.balance });
             }
         });
@@ -99,7 +117,7 @@ const settlementService = {
 
             const settleAmount = Math.min(debtor.amount, creditor.amount);
 
-            if (settleAmount > 0) {
+            if (settleAmount > 0.01) { // Only create meaningful settlements
                 settlements.push({
                     from: debtor.person,
                     to: creditor.person,
@@ -110,12 +128,12 @@ const settlementService = {
             debtor.amount -= settleAmount;
             creditor.amount -= settleAmount;
 
-            if (debtor.amount <= 0) i++;
-            if (creditor.amount <= 0) j++;
+            if (debtor.amount <= 0.01) i++;
+            if (creditor.amount <= 0.01) j++;
         }
 
         return settlements;
-    },
+    }
 
     // Get expense summary
     async getExpenseSummary() {
