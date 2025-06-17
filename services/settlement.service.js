@@ -133,7 +133,7 @@ const settlementService = {
         }
 
         return settlements;
-    }
+    },
 
     // Get expense summary
     async getExpenseSummary() {
