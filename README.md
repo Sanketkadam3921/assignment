@@ -74,8 +74,7 @@ Built using **Node.js**, **Express.js**, **Prisma**, and **PostgreSQL**, this ap
 
 ##  Sample Payloads
 
-### ✅ Add Regular Expense
-```json
+### Add Regular Expense
 {
   "amount": 650,
   "description": "Dinner at restaurant",
@@ -84,10 +83,8 @@ Built using **Node.js**, **Express.js**, **Prisma**, and **PostgreSQL**, this ap
   "shareType": "EQUAL",
   "category": "FOOD"
 }
-✅ Add Custom Share (EXACT)
-json
-Copy
-Edit
+Add Custom Share (EXACT)
+
 {
   "amount": 1000,
   "description": "Concert tickets",
@@ -101,10 +98,8 @@ Edit
   },
   "category": "ENTERTAINMENT"
 }
-✅ Add Recurring Expense
-json
-Copy
-Edit
+Add Recurring Expense
+
 {
   "amount": 2500,
   "description": "Monthly house rent",
@@ -122,12 +117,14 @@ Edit
 Postman Collection
 
 
-📬 Public Postman Collection with pre-filled test data:
-🔗 Click here to open collection
+Public Postman Collection with pre-filled test data:
+Click here to open collection    -----   https://www.postman.com/sanket3921/workspace/sanket/collection/24738996-b004f049-e233-4ef5-9a79-667df3f88c6a?action=share&creator=24738996&active-environment=24738996-b7d2c08c-7e44-43da-a273-f26267f5d823
 
 Covers all core flows and edge cases
 
 Includes recurring, analytics, settlements
+
+
 
 🛠️ Setup Instructions (For Local Dev)
 
