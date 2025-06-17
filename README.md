@@ -8,17 +8,17 @@ Built using **Node.js**, **Express.js**, **Prisma**, and **PostgreSQL**, this ap
 
 ##  Features
 
-### ✅ Core Functionalities
+### Core Functionalities
 - Add, update, delete expenses with smart splitting
 - Support for **Equal**, **Exact**, and **Percentage** sharing
 - Auto-manages people involved in expenses
 - Settlement calculations using **greedy algorithm**
 - Track balances and settlements between people
 
-### 🔁 Recurring Expenses
+###  Recurring Expenses
 - Define recurring bills with custom frequency (e.g., rent)
 
-### 📊 Analytics
+###  Analytics
 - Monthly summaries
 - Category-wise reports
 - Person-wise insights
@@ -26,14 +26,14 @@ Built using **Node.js**, **Express.js**, **Prisma**, and **PostgreSQL**, this ap
 
 ---
 
-## 🌐 Base API URL  
+##  Base API URL  
 `https://express-production-e484.up.railway.app`
 
 ---
 
-## 📬 API Endpoints
+## API Endpoints
 
-### 🔹 Expense Management
+###  Expense Management
 | Method | Endpoint                     | Description                    |
 |--------|------------------------------|--------------------------------|
 | GET    | `/expenses`                  | Get all expenses               |
@@ -41,28 +41,28 @@ Built using **Node.js**, **Express.js**, **Prisma**, and **PostgreSQL**, this ap
 | PUT    | `/expenses/:id`              | Update an expense              |
 | DELETE | `/expenses/:id`              | Delete an expense              |
 
-### 🔹 People & Balances
+###  People & Balances
 | Method | Endpoint                     | Description                    |
 |--------|------------------------------|--------------------------------|
 | GET    | `/expenses/people`           | List all involved people       |
 | GET    | `/balances`                  | Show person-wise balances      |
 | GET    | `/settlements`               | Get simplified settlements     |
 
-### 🔹 Categories
+### Categories
 | Method | Endpoint                         | Description                       |
 |--------|----------------------------------|-----------------------------------|
 | GET    | `/expenses/categories`           | Get all available categories      |
 | GET    | `/expenses/by-category`          | Fetch all expenses by category    |
 | GET    | `/expenses/category-summary`     | Summary by category               |
 
-### 🔹 Recurring Expenses
+###  Recurring Expenses
 | Method | Endpoint                          | Description                          |
 |--------|-----------------------------------|--------------------------------------|
 | GET    | `/expenses/recurring`             | Get all recurring expenses           |
 | POST   | `/expenses/recurring`             | Add a recurring expense              |
 | PUT    | `/expenses/recurring/:id`         | Update recurring expense             |
 
-### 🔹 Analytics
+###  Analytics
 | Method | Endpoint                                     | Description                                  |
 |--------|----------------------------------------------|----------------------------------------------|
 | GET    | `/expenses/analytics/monthly-summary`        | Monthly totals (with optional filters)       |
