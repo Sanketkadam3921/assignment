@@ -29,6 +29,8 @@ Built using **Node.js**, **Express.js**, **Prisma**, and **PostgreSQL**, this ap
 ##  Base API URL  
 `https://express-production-e484.up.railway.app`
 
+frontend url ---- https://frontendassignment-three.vercel.app/
+
 ---
 
 ## API Endpoints
