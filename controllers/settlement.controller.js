@@ -3,11 +3,11 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 function roundMoney(value) {
-    if (isNaN(value)) {
-        console.error(`Invalid money value: ${value}`);
+    const num = Number(value);
+    if (isNaN(num)) {
         return 0;
     }
-    return Math.round(Number(value) * 100) / 100;
+    return Math.round(num * 100) / 100;
 }
 
 const settlementService = {
@@ -16,105 +16,99 @@ const settlementService = {
             const expenses = await prisma.expense.findMany();
             const balances = {};
 
-            console.log(`Processing ${expenses.length} expenses`);
-
-            expenses.forEach((expense, index) => {
+            // Process each expense
+            for (const expense of expenses) {
                 try {
-                    // Convert amount to number, handling string values
+                    // Parse amount safely
                     const amount = parseFloat(expense.amount);
                     if (isNaN(amount) || amount <= 0) {
-                        console.error(`Invalid amount for expense ${expense.id}: ${expense.amount}`);
-                        return;
+                        console.warn(`Skipping expense ${expense.id} - invalid amount: ${expense.amount}`);
+                        continue;
                     }
 
-                    const paidBy = String(expense.paidBy).trim();
-                    let participants = [];
+                    const paidBy = String(expense.paidBy || '').trim();
+                    if (!paidBy) {
+                        console.warn(`Skipping expense ${expense.id} - no paidBy`);
+                        continue;
+                    }
 
-                    // Handle participants array
+                    // Get participants
+                    let participants = [];
                     if (Array.isArray(expense.participants)) {
-                        participants = expense.participants.map(p => String(p).trim());
-                    } else if (expense.participants && typeof expense.participants === 'object') {
-                        participants = Object.keys(expense.participants).map(p => String(p).trim());
-                    } else {
-                        console.error(`Invalid participants for expense ${expense.id}:`, expense.participants);
-                        return;
+                        participants = expense.participants
+                            .map(p => String(p || '').trim())
+                            .filter(p => p.length > 0);
                     }
 
                     if (participants.length === 0) {
-                        console.error(`No participants found for expense ${expense.id}`);
-                        return;
+                        console.warn(`Skipping expense ${expense.id} - no valid participants`);
+                        continue;
                     }
 
-                    // Initialize balance for payer if not exists
-                    if (!balances[paidBy]) {
-                        balances[paidBy] = { paid: 0, owes: 0, balance: 0 };
-                    }
+                    // Initialize balances for all people involved
+                    [paidBy, ...participants].forEach(person => {
+                        if (!balances[person]) {
+                            balances[person] = { paid: 0, owes: 0, balance: 0 };
+                        }
+                    });
 
                     // Add to paid amount
                     balances[paidBy].paid += amount;
 
-                    // Calculate and distribute shares
+                    // Calculate shares based on share type
                     if (expense.shareType === 'EQUAL') {
-                        const share = amount / participants.length;
+                        const sharePerPerson = amount / participants.length;
                         participants.forEach(person => {
-                            if (!balances[person]) {
-                                balances[person] = { paid: 0, owes: 0, balance: 0 };
-                            }
-                            balances[person].owes += share;
-                        });
-                    } else if (expense.shareType === 'EXACT' && expense.customShares) {
-                        Object.entries(expense.customShares).forEach(([person, share]) => {
-                            const personName = String(person).trim();
-                            const shareAmount = parseFloat(share);
-
-                            if (!isNaN(shareAmount) && shareAmount > 0) {
-                                if (!balances[personName]) {
-                                    balances[personName] = { paid: 0, owes: 0, balance: 0 };
-                                }
-                                balances[personName].owes += shareAmount;
-                            }
-                        });
-                    } else if (expense.shareType === 'PERCENTAGE' && expense.customShares) {
-                        Object.entries(expense.customShares).forEach(([person, percentage]) => {
-                            const personName = String(person).trim();
-                            const percentageValue = parseFloat(percentage);
-
-                            if (!isNaN(percentageValue) && percentageValue > 0) {
-                                if (!balances[personName]) {
-                                    balances[personName] = { paid: 0, owes: 0, balance: 0 };
-                                }
-                                const share = (amount * percentageValue) / 100;
-                                balances[personName].owes += share;
-                            }
+                            balances[person].owes += sharePerPerson;
                         });
                     }
-
-                    console.log(`Processed expense ${index + 1}: ${expense.description} - ${amount} paid by ${paidBy}`);
-
+                    else if (expense.shareType === 'EXACT' && expense.customShares) {
+                        for (const [person, share] of Object.entries(expense.customShares)) {
+                            const shareAmount = parseFloat(share);
+                            if (!isNaN(shareAmount) && shareAmount > 0) {
+                                const personName = String(person).trim();
+                                if (balances[personName]) {
+                                    balances[personName].owes += shareAmount;
+                                }
+                            }
+                        }
+                    }
+                    else if (expense.shareType === 'PERCENTAGE' && expense.customShares) {
+                        for (const [person, percentage] of Object.entries(expense.customShares)) {
+                            const percentValue = parseFloat(percentage);
+                            if (!isNaN(percentValue) && percentValue > 0) {
+                                const personName = String(person).trim();
+                                if (balances[personName]) {
+                                    const shareAmount = (amount * percentValue) / 100;
+                                    balances[personName].owes += shareAmount;
+                                }
+                            }
+                        }
+                    }
                 } catch (expenseError) {
-                    console.error(`Error processing expense ${expense.id}:`, expenseError);
+                    console.error(`Error processing expense ${expense.id}:`, expenseError.message);
                 }
-            });
+            }
 
-            // Round all final balances
-            Object.keys(balances).forEach(person => {
-                const paid = roundMoney(balances[person].paid);
-                const owes = roundMoney(balances[person].owes);
+            // Calculate final balances with rounding
+            const finalBalances = {};
+            for (const [person, data] of Object.entries(balances)) {
+                const paid = roundMoney(data.paid);
+                const owes = roundMoney(data.owes);
                 const balance = roundMoney(paid - owes);
 
-                balances[person] = {
+                finalBalances[person] = {
                     paid,
                     owes,
                     balance
                 };
+            }
 
-                console.log(`${person}: paid=${paid}, owes=${owes}, balance=${balance}`);
-            });
+            return finalBalances;
 
-            return balances;
         } catch (error) {
             console.error('Error in calculateBalances:', error);
-            throw new Error('Failed to calculate balances');
+            throw new Error(`Failed to calculate balances: ${error.message}`);
         }
     },
 
@@ -123,45 +117,50 @@ const settlementService = {
             const balances = await this.calculateBalances();
             const settlements = [];
 
-            // Create arrays for debtors (negative balance) and creditors (positive balance)
-            const debtors = [];
-            const creditors = [];
+            // Separate people who owe money vs those who are owed money
+            const peopleWhoOwe = [];
+            const peopleOwed = [];
 
-            Object.entries(balances).forEach(([person, data]) => {
-                const balance = Number(data.balance);
+            for (const [person, data] of Object.entries(balances)) {
+                const balance = data.balance;
 
-                if (isNaN(balance)) {
-                    console.error(`Invalid balance for ${person}:`, data.balance);
-                    return;
-                }
-
-                if (balance < -0.01) { // Person owes money
-                    debtors.push({
+                if (balance < -0.01) {
+                    // Person owes money (negative balance)
+                    peopleWhoOwe.push({
                         person,
                         amount: roundMoney(Math.abs(balance))
                     });
-                } else if (balance > 0.01) { // Person is owed money
-                    creditors.push({
+                } else if (balance > 0.01) {
+                    // Person is owed money (positive balance)
+                    peopleOwed.push({
                         person,
                         amount: roundMoney(balance)
                     });
                 }
-            });
+            }
 
-            console.log('Debtors:', debtors);
-            console.log('Creditors:', creditors);
+            // Sort by amount (largest first)
+            peopleWhoOwe.sort((a, b) => b.amount - a.amount);
+            peopleOwed.sort((a, b) => b.amount - a.amount);
 
-            // Sort by amount (largest first for efficient settlement)
-            debtors.sort((a, b) => b.amount - a.amount);
-            creditors.sort((a, b) => b.amount - a.amount);
+            // Create settlements
+            let oweIndex = 0;
+            let owedIndex = 0;
+            let iterations = 0;
+            const maxIterations = 100; // Safety limit
 
-            // Create settlements by matching debtors with creditors
-            let debtorIndex = 0;
-            let creditorIndex = 0;
+            while (oweIndex < peopleWhoOwe.length &&
+                owedIndex < peopleOwed.length &&
+                iterations < maxIterations) {
 
-            while (debtorIndex < debtors.length && creditorIndex < creditors.length) {
-                const debtor = debtors[debtorIndex];
-                const creditor = creditors[creditorIndex];
+                iterations++;
+
+                const debtor = peopleWhoOwe[oweIndex];
+                const creditor = peopleOwed[owedIndex];
+
+                if (!debtor || !creditor || debtor.amount <= 0 || creditor.amount <= 0) {
+                    break;
+                }
 
                 const settlementAmount = roundMoney(Math.min(debtor.amount, creditor.amount));
 
@@ -172,53 +171,53 @@ const settlementService = {
                         amount: settlementAmount
                     });
 
-                    // Update remaining amounts
                     debtor.amount = roundMoney(debtor.amount - settlementAmount);
                     creditor.amount = roundMoney(creditor.amount - settlementAmount);
                 }
 
-                // Move to next debtor/creditor if current one is settled
+                // Move to next person if current debt/credit is settled
                 if (debtor.amount <= 0.01) {
-                    debtorIndex++;
+                    oweIndex++;
                 }
                 if (creditor.amount <= 0.01) {
-                    creditorIndex++;
+                    owedIndex++;
                 }
             }
 
-            console.log('Calculated settlements:', settlements);
             return settlements;
 
         } catch (error) {
             console.error('Error in calculateSettlements:', error);
-            throw new Error('Failed to calculate settlements');
+            throw new Error(`Failed to calculate settlements: ${error.message}`);
         }
     },
 
     async getExpenseSummary() {
         try {
             const expenses = await prisma.expense.findMany();
-            const validExpenses = expenses.filter(exp => {
-                const amount = parseFloat(exp.amount);
-                return !isNaN(amount) && amount > 0;
-            });
+            let totalAmount = 0;
+            let validExpenseCount = 0;
 
-            const totalExpenses = validExpenses.length;
-            const totalAmount = validExpenses.reduce((sum, exp) => {
-                return sum + parseFloat(exp.amount);
-            }, 0);
+            for (const expense of expenses) {
+                const amount = parseFloat(expense.amount);
+                if (!isNaN(amount) && amount > 0) {
+                    totalAmount += amount;
+                    validExpenseCount++;
+                }
+            }
 
             const people = await this.getAllPeople();
 
             return {
-                totalExpenses,
+                totalExpenses: validExpenseCount,
                 totalAmount: roundMoney(totalAmount),
                 totalPeople: people.length,
-                averageExpense: totalExpenses > 0 ? roundMoney(totalAmount / totalExpenses) : 0
+                averageExpense: validExpenseCount > 0 ? roundMoney(totalAmount / validExpenseCount) : 0
             };
+
         } catch (error) {
             console.error('Error in getExpenseSummary:', error);
-            throw new Error('Failed to get expense summary');
+            throw new Error(`Failed to get expense summary: ${error.message}`);
         }
     },
 
@@ -227,22 +226,29 @@ const settlementService = {
             const expenses = await prisma.expense.findMany();
             const peopleSet = new Set();
 
-            expenses.forEach(expense => {
-                // Add payer
-                peopleSet.add(String(expense.paidBy).trim());
+            for (const expense of expenses) {
+                // Add person who paid
+                const paidBy = String(expense.paidBy || '').trim();
+                if (paidBy) {
+                    peopleSet.add(paidBy);
+                }
 
                 // Add participants
                 if (Array.isArray(expense.participants)) {
-                    expense.participants.forEach(p => peopleSet.add(String(p).trim()));
-                } else if (expense.participants && typeof expense.participants === 'object') {
-                    Object.keys(expense.participants).forEach(p => peopleSet.add(String(p).trim()));
+                    expense.participants.forEach(participant => {
+                        const person = String(participant || '').trim();
+                        if (person) {
+                            peopleSet.add(person);
+                        }
+                    });
                 }
-            });
+            }
 
             return Array.from(peopleSet).sort();
+
         } catch (error) {
             console.error('Error in getAllPeople:', error);
-            throw new Error('Failed to get all people');
+            throw new Error(`Failed to get all people: ${error.message}`);
         }
     }
 };
