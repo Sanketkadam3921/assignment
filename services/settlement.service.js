@@ -2,6 +2,10 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+function roundMoney(value) {
+    return Math.round(value * 100 + Number.EPSILON) / 100;
+}
+
 const settlementService = {
     // Calculate balances for each person
     async calculateBalances() {
@@ -9,7 +13,12 @@ const settlementService = {
         const balances = {};
 
         expenses.forEach(expense => {
-            const { amount, paidBy, participants, shareType, customShares } = expense;
+            const { amount, paidBy, participants: rawParticipants, shareType, customShares } = expense;
+
+            // Ensure participants is always an array
+            const participants = Array.isArray(rawParticipants)
+                ? rawParticipants
+                : Object.keys(rawParticipants || {});
 
             // Initialize balance for the person who paid
             if (!balances[paidBy]) {
@@ -53,9 +62,9 @@ const settlementService = {
 
         // Calculate final balance (positive = owed money, negative = owes money)
         Object.keys(balances).forEach(person => {
-            balances[person].balance = Math.round((balances[person].paid - balances[person].owes) * 100) / 100;
-            balances[person].paid = Math.round(balances[person].paid * 100) / 100;
-            balances[person].owes = Math.round(balances[person].owes * 100) / 100;
+            balances[person].balance = roundMoney(balances[person].paid - balances[person].owes);
+            balances[person].paid = roundMoney(balances[person].paid);
+            balances[person].owes = roundMoney(balances[person].owes);
         });
 
         return balances;
@@ -71,9 +80,9 @@ const settlementService = {
         const creditors = [];
 
         Object.entries(balances).forEach(([person, data]) => {
-            if (data.balance < -0.01) { // Owes money (threshold to avoid tiny amounts)
+            if (data.balance < 0) { // Owes money
                 debtors.push({ person, amount: Math.abs(data.balance) });
-            } else if (data.balance > 0.01) { // Is owed money
+            } else if (data.balance > 0) { // Is owed money
                 creditors.push({ person, amount: data.balance });
             }
         });
@@ -82,7 +91,7 @@ const settlementService = {
         debtors.sort((a, b) => b.amount - a.amount);
         creditors.sort((a, b) => b.amount - a.amount);
 
-        // Create settlement transactions using a greedy algorithm
+        // Create settlement transactions
         let i = 0, j = 0;
         while (i < debtors.length && j < creditors.length) {
             const debtor = debtors[i];
@@ -90,20 +99,19 @@ const settlementService = {
 
             const settleAmount = Math.min(debtor.amount, creditor.amount);
 
-            if (settleAmount > 0.01) { // Only create settlements for meaningful amounts
+            if (settleAmount > 0) {
                 settlements.push({
                     from: debtor.person,
                     to: creditor.person,
-                    amount: Math.round(settleAmount * 100) / 100
+                    amount: roundMoney(settleAmount)
                 });
             }
 
             debtor.amount -= settleAmount;
             creditor.amount -= settleAmount;
 
-            // Move to next debtor/creditor if current one is settled
-            if (debtor.amount < 0.01) i++;
-            if (creditor.amount < 0.01) j++;
+            if (debtor.amount <= 0) i++;
+            if (creditor.amount <= 0) j++;
         }
 
         return settlements;
@@ -118,9 +126,9 @@ const settlementService = {
 
         return {
             totalExpenses,
-            totalAmount: Math.round(totalAmount * 100) / 100,
+            totalAmount: roundMoney(totalAmount),
             totalPeople: people.length,
-            averageExpense: totalExpenses > 0 ? Math.round((totalAmount / totalExpenses) * 100) / 100 : 0
+            averageExpense: totalExpenses > 0 ? roundMoney(totalAmount / totalExpenses) : 0
         };
     },
 
@@ -130,9 +138,10 @@ const settlementService = {
 
         expenses.forEach(expense => {
             peopleSet.add(expense.paidBy);
-            if (Array.isArray(expense.participants)) {
-                expense.participants.forEach(person => peopleSet.add(person));
-            }
+            const participants = Array.isArray(expense.participants)
+                ? expense.participants
+                : Object.keys(expense.participants || {});
+            participants.forEach(person => peopleSet.add(person));
         });
 
         return Array.from(peopleSet).sort();
