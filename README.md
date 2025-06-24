@@ -75,7 +75,6 @@ frontend url ---- https://frontendassignment-three.vercel.app/
 ---
 
 
- Demo Video -https://www.loom.com/share/6d5c205f9b874618b2f3c939593bb13f?sid=e6db8830-5442-4502-a7d0-04ec1f757e7b
 
 
 Postman Collection
